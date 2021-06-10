@@ -4,6 +4,17 @@ import time
 import requests
 import mysql.connector
 
+import base64
+import jwt
+import json
+
+
+url_refreshToken = 'https://apis.bitkubnext.com/v1.0/auth/refresh-token'
+url_sendOTP      = 'https://apis.bitkubnext.com/v1.0/auth/login-with-phone/req'
+url_login        = 'https://apis.bitkubnext.com/v1.0/auth/login-with-phone'
+url_airdrop      = 'https://apis.bitkubnext.com/v1.0/wallets/erc20/airdrop'
+
+headers_default  = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}
 
 def sqlcommand( str_sqlcommand ):
 
@@ -17,10 +28,7 @@ def sqlcommand( str_sqlcommand ):
 
 def insert_Newtoken():
 
-    url_sendOTP = 'https://apis.bitkubnext.com/v1.0/auth/login-with-phone/req'
-    url_login   = 'https://apis.bitkubnext.com/v1.0/auth/login-with-phone'
-
-    headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}
+    
 
     phone = input('Enter your phone: ')
     phone = "+66"+phone[1:10]
@@ -28,7 +36,7 @@ def insert_Newtoken():
     recaptcha_token = input('Enter recaptcha_token: ')
 
     data_sendOTP = '{"phone":"'+phone+'","recaptcha_token":"'+recaptcha_token+'","otp_req":true}'
-    r_sendOTP    = requests.post(url_sendOTP, data=data_sendOTP, headers=headers)
+    r_sendOTP    = requests.post(url_sendOTP, data=data_sendOTP, headers=headers_default)
 
     
 
@@ -84,11 +92,6 @@ def insert_Runbot():
 
     event = input('Enter Event: ')
 
-    url_refreshToken = 'https://apis.bitkubnext.com/v1.0/auth/refresh-token'
-    url_airdrop      = 'https://apis.bitkubnext.com/v1.0/wallets/erc20/airdrop'
-    
-    headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}
-
     botCounts = sqlcommand("SELECT token, phone FROM T_FanstokenLists")
     
     for x in botCounts:
@@ -96,7 +99,7 @@ def insert_Runbot():
         refresh_phone = x[1]
         
         data_refreshToken = '{"refresh_token": "'+refresh_token+'"}'
-        r_refreshToken    = requests.post(url_refreshToken, data=data_refreshToken, headers=headers)
+        r_refreshToken    = requests.post(url_refreshToken, data=data_refreshToken, headers=headers_default)
 
         if 'access_token' in r_refreshToken.json():
 
@@ -121,18 +124,49 @@ def insert_Runbot():
 def Show_Bot():
     
     print("")
-    botCounts = sqlcommand("SELECT token, phone FROM T_FanstokenLists")
+    botCounts = sqlcommand("SELECT id, token, phone FROM T_FanstokenLists")
+    sumBalance = 0
     i = 0
 
     for x in botCounts:
-        refresh_token = x[0]
-        refresh_phone = x[1]
-        i += 1
-        print("Phone["+str(i)+"]: "+refresh_phone)
+        refresh_id    = x[0]
+        refresh_token = x[1]
+        refresh_phone = x[2]
+
+        data_refreshToken = '{"refresh_token": "'+refresh_token+'"}'
+        r_refreshToken    = requests.post(url_refreshToken, data=data_refreshToken, headers=headers_default)
+
+        
+        if 'access_token' in r_refreshToken.json():
+
+
+            txt = r_refreshToken.json()['access_token']
+
+            token_split = txt.split(".")
+
+            base64_message = token_split[1]+'=='
+            base64_bytes = base64_message.encode('ascii')
+            message_bytes = base64.b64decode(base64_bytes)
+            message = message_bytes.decode('ascii')
+
+            # print(message)
+
+            y = json.loads(message)
+            # print(y["primary_wallet_address"])
+            r_wallet  = requests.get('https://bkcscan.com/api?module=account&action=tokenbalance&contractaddress=0x9C04EFD1E9aD51A605eeDcb576159242FF930368&address='+y['primary_wallet_address']+'', headers=headers_default)
+
+            Balance = r_wallet.json()['result'][0:-18] != '' and r_wallet.json()['result'][0:-18] or 0
+            sumBalance += int(Balance)
+            i += 1
+
+            print("["+str(i)+"] ID: "+str(refresh_id)+" Phone >> "+refresh_phone+" >> Balance : "+str(Balance))
+
+            
 
     if i == 0:
         print("- Lists Empty")
 
+    print("\nSum all account: "+str(sumBalance)+" Fans token")
     input('\nEnter to continue')
 
 
