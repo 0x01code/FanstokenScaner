@@ -24,7 +24,11 @@ def sqlcommand(str_sqlcommand):
 
     # connection to database
     db = mysql.connector.connect(
-        host="you_host", user="you_user", password="you_password", database="you_database")
+        host="you_host",
+        user="you_user",
+        password="you_password",
+        database="you_database"
+    )
 
     cur = db.cursor()
     query = str(str_sqlcommand)
