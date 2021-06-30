@@ -189,7 +189,7 @@ def main():
     while n != 1:
         os.system('cls')
 
-        print("\n[ * Ddeveloped by STP5940 * ]\n")
+        print("\n[ * developed by STP5940 and 0x01code * ]\n")
         print("[1]  Add phone scan QR code")
         print("[2]  Run phone scan QR code")
         print("[3]  Show lists phone")
