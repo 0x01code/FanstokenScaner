@@ -1,8 +1,9 @@
 import os
 import sys
 import time
-import requests
 import mysql.connector
+import cloudscraper
+from dotenv import load_dotenv
 
 import base64
 import jwt
@@ -16,20 +17,24 @@ url_airdrop = 'https://apis.bitkubnext.com/v1.0/wallets/erc20/airdrop'
 
 headers_default = {
     'content-type': 'application/json',
-    'Accept-Charset': 'UTF-8'
+    'Accept-Charset': 'UTF-8',
+    'Origin': 'https://app.bitkubnext.com',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36',
 }
+
+load_dotenv('.env')
+db = mysql.connector.connect(
+    host=os.getenv('DB_HOST'),
+    user=os.getenv('DB_USER'),
+    password=os.getenv('DB_PASSWORD'),
+    database=os.getenv('DB_BATABASE')
+)
+
+scraper = cloudscraper.create_scraper()
 
 
 def sqlcommand(str_sqlcommand):
-
-    # connection to database
-    db = mysql.connector.connect(
-        host="you_host",
-        user="you_user",
-        password="you_password",
-        database="you_database"
-    )
-
+    global db
     cur = db.cursor()
     query = str(str_sqlcommand)
     cur.execute(query)
@@ -37,67 +42,32 @@ def sqlcommand(str_sqlcommand):
 
 
 def insert_Newtoken():
+    global db, headers_default
 
     phone = input('Enter your phone: ')
     phone = "+66" + phone[1:10]
 
-    recaptcha_token = input('Enter recaptcha_token: ')
+    refresh_token = input('Enter refresh_token: ')
 
-    data_sendOTP = '{"phone":"' + phone + '","recaptcha_token":"' + \
-        recaptcha_token + '","otp_req":true}'
-    r_sendOTP = requests.post(
-        url_sendOTP, data=data_sendOTP, headers=headers_default)
-
-    if 'ref' in r_sendOTP.json():
-
-        os.system('cls')
-
-        print("Phone: " + phone)
-        print("Ref: " + r_sendOTP.json()['ref'])
-        opt = input('Enter opt: ')
-
-        data_login = '{"otp":"' + opt + '","phone":"' + \
-            phone + '","ref":"' + r_sendOTP.json()['ref'] + '"}'
-        r_login = requests.post(url_login, data=data_login, headers=headers)
-
-        if 'refresh_token' in r_login.json():
-
-            botCounts = sqlcommand(
-                "SELECT * FROM T_FanstokenLists WHERE phone = '" + phone + "' ")
-            if len(botCounts) > 0:
-                print("\n['ERROR']: Have phone: " + phone)
-                input('\nEnter to continue')
-
-            else:
-
-                mydb = mysql.connector.connect(
-                    host="you_host",
-                    user="you_user",
-                    password="you_password",
-                    database="you_database"
-                )
-
-                mycursor = mydb.cursor()
-
-                sql = "INSERT INTO T_FanstokenLists (id, phone, token) VALUES (NULL, %s, %s)"
-                val = (phone, r_login.json()['refresh_token'])
-
-                mycursor.execute(sql, val)
-                mydb.commit()
-
-                print("\n['OK']: record inserted. insert success")
-                input('\nEnter to continue')
-
-        else:
-            print("\n['ERROR']: OTP not found")
-            input('\nEnter to continue')
-
+    botCounts = sqlcommand("SELECT * FROM T_FanstokenLists WHERE phone = '" + phone + "' ")
+    if len(botCounts) > 0:
+        print("\n['ERROR']: Have phone: " + phone)
+        input('\nEnter to continue')
     else:
-        print("\n['ERROR']: Phone number or recaptcha token not found")
+        mycursor = db.cursor()
+
+        sql = "INSERT INTO T_FanstokenLists (id, phone, token) VALUES (NULL, %s, %s)"
+        val = (phone, refresh_token)
+
+        mycursor.execute(sql, val)
+        db.commit()
+
+        print("\n['OK']: record inserted. insert success")
         input('\nEnter to continue')
 
 
 def insert_Runbot():
+    global db, headers_default, scraper
 
     event = input('Enter Event: ')
 
@@ -107,20 +77,20 @@ def insert_Runbot():
         refresh_token = x[0]
         refresh_phone = x[1]
 
-        data_refreshToken = '{"refresh_token": "'+refresh_token+'"}'
-        r_refreshToken = requests.post(
-            url_refreshToken, data=data_refreshToken, headers=headers_default)
+        data_refreshToken = '{"refresh_token": "' + refresh_token + '"}'
+        r_refreshToken = scraper.post(url_refreshToken, data=data_refreshToken, headers=headers_default)
 
         if 'access_token' in r_refreshToken.json():
 
             recaptcha_token = input('\nEnter recaptcha_token: ')
 
-            headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8',
-                       'Authorization': 'Bearer ' + str(r_refreshToken.json()['access_token'])}
-            data_airdrop = '{"qr_event_id": "' + event + \
-                '", "recaptcha_token": "' + recaptcha_token + '"}'
-            r_airdrop = requests.post(
-                url_airdrop, data=data_airdrop, headers=headers)
+            headers = {
+                'content-type': 'application/json', 
+                'Accept-Charset': 'UTF-8', 
+                'Authorization': 'Bearer ' + str(r_refreshToken.json()['access_token'])
+            }
+            data_airdrop = '{"qr_event_id": "' + event + '", "recaptcha_token": "' + recaptcha_token + '"}'
+            r_airdrop = scraper.post(url_airdrop, data=data_airdrop, headers=headers)
 
             print("\nPhone: " + refresh_phone)
             print(r_airdrop.json())
@@ -135,6 +105,7 @@ def insert_Runbot():
 
 
 def Show_Bot():
+    global headers_default, scraper
 
     print("")
     botCounts = sqlcommand("SELECT id, token, phone FROM T_FanstokenLists")
@@ -147,8 +118,7 @@ def Show_Bot():
         refresh_phone = x[2]
 
         data_refreshToken = '{"refresh_token": "' + refresh_token + '"}'
-        r_refreshToken = requests.post(
-            url_refreshToken, data=data_refreshToken, headers=headers_default)
+        r_refreshToken = scraper.post(url_refreshToken, data=data_refreshToken, headers=headers_default)
 
         if 'access_token' in r_refreshToken.json():
 
@@ -161,25 +131,19 @@ def Show_Bot():
             message_bytes = base64.b64decode(base64_bytes)
             message = message_bytes.decode('ascii')
 
-            # print(message)
-
             y = json.loads(message)
-            # print(y["primary_wallet_address"])
-            r_wallet = requests.get('https://bkcscan.com/api?module=account&action=tokenbalance&contractaddress=0x9C04EFD1E9aD51A605eeDcb576159242FF930368&address=' +
-                                    y['primary_wallet_address'] + '', headers=headers_default)
+            r_wallet = scraper.get(f'https://bkcscan.com/api?module=account&action=tokenbalance&contractaddress=0x9C04EFD1E9aD51A605eeDcb576159242FF930368&address={y["primary_wallet_address"]}', headers=headers_default)
 
-            Balance = r_wallet.json(
-            )['result'][0:-18] != '' and r_wallet.json()['result'][0:-18] or 0
+            Balance = r_wallet.json()['result'][0:-18] != '' and r_wallet.json()['result'][0:-18] or 0
             sumBalance += int(Balance)
             i += 1
 
-            print("[" + str(i) + "] ID: " + str(refresh_id) +
-                  " Phone >> " + refresh_phone + " >> Balance : " + str(Balance))
+            print(f"[{str(i)}] ID: {str(refresh_id)} Phone >> {refresh_phone} >> Balance : {str(Balance)}")
 
     if i == 0:
         print("- Lists Empty")
 
-    print("\nSum all account: " + str(sumBalance) + " Fans token")
+    print(f"\nSum all account: {str(sumBalance)} Fans token")
     input('\nEnter to continue')
 
 
