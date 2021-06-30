@@ -4,6 +4,7 @@ import time
 import mysql.connector
 import cloudscraper
 from dotenv import load_dotenv
+from anticaptchaofficial.recaptchav2proxyless import *
 
 import base64
 import jwt
@@ -31,6 +32,12 @@ db = mysql.connector.connect(
 )
 
 scraper = cloudscraper.create_scraper()
+
+solver = recaptchaV2Proxyless()
+solver.set_verbose(1)
+solver.set_key(os.getenv('API_KEY'))
+solver.set_website_url(os.getenv('WEBSITE_URL'))
+solver.set_website_key(os.getenv('WEBSITE_KEY'))
 
 
 def sqlcommand(str_sqlcommand):
@@ -81,19 +88,22 @@ def insert_Runbot():
         r_refreshToken = scraper.post(url_refreshToken, data=data_refreshToken, headers=headers_default)
 
         if 'access_token' in r_refreshToken.json():
+            
+            recaptcha_token = solver.solve_and_return_solution()
+            if recaptcha_token != 0:
 
-            recaptcha_token = input('\nEnter recaptcha_token: ')
+                headers = {
+                    'content-type': 'application/json', 
+                    'Accept-Charset': 'UTF-8', 
+                    'Authorization': 'Bearer ' + str(r_refreshToken.json()['access_token'])
+                }
+                data_airdrop = '{"qr_event_id": "' + event + '", "recaptcha_token": "' + recaptcha_token + '"}'
+                r_airdrop = scraper.post(url_airdrop, data=data_airdrop, headers=headers)
 
-            headers = {
-                'content-type': 'application/json', 
-                'Accept-Charset': 'UTF-8', 
-                'Authorization': 'Bearer ' + str(r_refreshToken.json()['access_token'])
-            }
-            data_airdrop = '{"qr_event_id": "' + event + '", "recaptcha_token": "' + recaptcha_token + '"}'
-            r_airdrop = scraper.post(url_airdrop, data=data_airdrop, headers=headers)
-
-            print("\nPhone: " + refresh_phone)
-            print(r_airdrop.json())
+                print("\nPhone: " + refresh_phone)
+                print(r_airdrop.json())
+            else:
+                print("task finished with error " + solver.error_code)
 
         else:
             print("\nPhone: " + refresh_phone)
