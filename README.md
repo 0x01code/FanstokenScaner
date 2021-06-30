@@ -7,6 +7,8 @@
 2. เปลี่ยนค่าตัวแปรในไฟล์ .env
 3. รัน python3 FanstokenScaner.py
 
+API_KEY ไปสมัครจากเว็บ http://getcaptchasolution.com/0c6uffpvm8 (ใช้สำหรับ Bypass recapcha google)
+
 ## วิดีโอสอนการใช้งาน
 ** มีค่าใช้จ่ายติดต่อ https://www.facebook.com/0x01code
 
