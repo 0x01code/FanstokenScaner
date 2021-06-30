@@ -1,6 +1,8 @@
 # FanstokenScaner
-บอทสแกนรับ QR Code Fans Token หลายเบอร์พร้อมกัน
+บอทสแกนรับ QR Code Fans Token หลายเบอร์พร้อมกัน  
 
+
+![home screenshot](https://raw.githubusercontent.com/0x01code/FanstokenScaner/main/screenshot/home.png)
 
 ## วิธีใช้งาน
 1. เปลี่ยนชื่อไฟล์ .env.example เป็น .env
