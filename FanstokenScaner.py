@@ -110,6 +110,7 @@ def insert_Runbot():
         refresh_token = x[0]
         refresh_phone = x[1]
 
+        solver.set_website_url(url_refreshToken)
         data_refreshToken = '{"refresh_token": "' + refresh_token + '"}'
         r_refreshToken = scraper.post(url_refreshToken, data=data_refreshToken, headers=headers_default)
 
