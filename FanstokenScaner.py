@@ -36,7 +36,6 @@ scraper = cloudscraper.create_scraper()
 solver = recaptchaV2Proxyless()
 solver.set_verbose(1)
 solver.set_key(os.getenv('API_KEY'))
-solver.set_website_url(os.getenv('WEBSITE_URL'))
 solver.set_website_key(os.getenv('WEBSITE_KEY'))
 
 
@@ -49,28 +48,55 @@ def sqlcommand(str_sqlcommand):
 
 
 def insert_Newtoken():
-    global db, headers_default
+    global db, headers_default, scraper
 
     phone = input('Enter your phone: ')
     phone = "+66" + phone[1:10]
 
-    refresh_token = input('Enter refresh_token: ')
+    solver.set_website_url(url_sendOTP)
+    recaptcha_token = solver.solve_and_return_solution()
+    if recaptcha_token != 0:
+        data_sendOTP = '{"phone":"' + phone + '","recaptcha_token":"' + recaptcha_token + '","otp_req":true}'
+        r_sendOTP = scraper.post(url_sendOTP, data=data_sendOTP, headers=headers_default)
+        if r_sendOTP.status_code == 403:
+            print("\n['ERROR']: Access denied")
+            input('\nEnter to continue')
+        else:
 
-    botCounts = sqlcommand("SELECT * FROM T_FanstokenLists WHERE phone = '" + phone + "' ")
-    if len(botCounts) > 0:
-        print("\n['ERROR']: Have phone: " + phone)
-        input('\nEnter to continue')
+            if 'ref' in r_sendOTP.json():
+                os.system('cls')
+
+                print("Phone: " + phone)
+                print ("Ref: " + r_sendOTP.json()['ref'])
+                opt = input('Enter opt: ')
+
+                data_login = '{"otp":"' + opt + '","phone":"' + phone + '","ref":"' + r_sendOTP.json()['ref'] + '"}'
+                r_login  = scraper.post(url_login, data=data_login, headers=headers_default)
+
+                if 'refresh_token' in r_login.json():
+                    botCounts = sqlcommand("SELECT * FROM T_FanstokenLists WHERE phone = '" + phone + "' ")
+                    if len(botCounts) > 0 :
+                        print("\n['ERROR']: Have phone: " + phone)
+                        input('\nEnter to continue')
+                    else:
+                        mycursor = db.cursor()
+
+                        sql = "INSERT INTO T_FanstokenLists (id, phone, token) VALUES (NULL, %s, %s)"
+                        val = (phone, r_login.json()['refresh_token'])
+
+                        mycursor.execute(sql, val)
+                        db.commit()
+
+                        print("\n['OK']: record inserted. insert success")
+                        input('\nEnter to continue')
+                else:
+                    print("\n['ERROR']: OTP not found")
+                    input('\nEnter to continue')
+            else:
+                print("\n['ERROR']: Phone number or recaptcha token not found")
+                input('\nEnter to continue')
     else:
-        mycursor = db.cursor()
-
-        sql = "INSERT INTO T_FanstokenLists (id, phone, token) VALUES (NULL, %s, %s)"
-        val = (phone, refresh_token)
-
-        mycursor.execute(sql, val)
-        db.commit()
-
-        print("\n['OK']: record inserted. insert success")
-        input('\nEnter to continue')
+        print("task finished with error " + solver.error_code)
 
 
 def insert_Runbot():
