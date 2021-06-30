@@ -1,3 +1,4 @@
 cloudscraper
 python-dotenv
 anticaptchaofficial
+mysql-connector-python
