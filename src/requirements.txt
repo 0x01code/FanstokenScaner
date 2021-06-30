@@ -1,4 +1,3 @@
-jwt
 cloudscraper
 python-dotenv
 anticaptchaofficial

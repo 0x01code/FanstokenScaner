@@ -5,7 +5,8 @@
 ## วิธีใช้งาน
 1. เปลี่ยนชื่อไฟล์ .env.example เป็น .env
 2. เปลี่ยนค่าตัวแปรในไฟล์ .env
-3. รัน python3 FanstokenScaner.py
+3. ติดตั้งสิ่งที่จะต้องใช้ pip install -r requirements.txt
+4. รัน python3 FanstokenScaner.py
 
 API_KEY ไปสมัครจากเว็บ http://getcaptchasolution.com/0c6uffpvm8 (ใช้สำหรับ Bypass recapcha google)
 
@@ -13,5 +14,11 @@ API_KEY ไปสมัครจากเว็บ http://getcaptchasolution.com
 ** มีค่าใช้จ่าย (10 FANS) ติดต่อ https://www.facebook.com/0x01code
 
 ## หมายเหตุ
-- ไฟล์ FanstokenScanerOnline.py เป็นของ STP5940 หากต้องการใช้งานด้วยไฟล์นี้ติดต่อ STP5940 ได้เลย
-- อาจโดนบล็อค ip
+- ขอบคุณต้นแบบจาก STP5940
+- อาจโดนบล็อค ip จาก cloudflare
+
+## โดเนท
+LTC: Ldngy2JBgdirmwhRiBhUbnqTp45Jkw5o8V
+BTC: 3D1JqTN8FtrdzGRpfAN4h8jpKZnBYXeN6H
+KUB: 0x44a4fad8775b3f08965d9eb1898ab5c10b82fa74
+USDT [ERC20]: 0x54fae4078949d666402091d1557b7ad1769099ae
