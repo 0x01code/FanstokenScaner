@@ -97,19 +97,22 @@ class FansToken:
 
                     data_login = '{"otp":"' + opt + '","phone":"' + phone + '","ref":"' + r_sendOTP['json']['ref'] + '"}'
                     r_login = self.request('POST', self.url_login, data=data_login)
-
-                    if 'refresh_token' in r_login['json']:
-                        botCounts = self.sqlcommand('SELECT', f"SELECT * FROM `t_fanstokenlists` WHERE phone = '{phone}'")
-                        if len(botCounts) > 0:
-                            print("\n['ERROR']: Have phone: " + phone)
-                            input('\nEnter to continue')
-                        else:
-                            self.sqlcommand('INSERT', "INSERT INTO `t_fanstokenlists` (id, phone, token) VALUES (NULL, %s, %s)", (phone, r_login['json']['refresh_token']))
-                            print("\n['OK']: record inserted. insert success")
-                            input('\nEnter to continue')
-                    else:
-                        print("\n['ERROR']: OTP not found")
+                    if r_login['status'] == 403:
+                        print("\n['ERROR']: Access denied")
                         input('\nEnter to continue')
+                    else:
+                        if 'refresh_token' in r_login['json']:
+                            botCounts = self.sqlcommand('SELECT', f"SELECT * FROM `t_fanstokenlists` WHERE phone = '{phone}'")
+                            if len(botCounts) > 0:
+                                print("\n['ERROR']: Have phone: " + phone)
+                                input('\nEnter to continue')
+                            else:
+                                self.sqlcommand('INSERT', "INSERT INTO `t_fanstokenlists` (id, phone, token) VALUES (NULL, %s, %s)", (phone, r_login['json']['refresh_token']))
+                                print("\n['OK']: record inserted. insert success")
+                                input('\nEnter to continue')
+                        else:
+                            print("\n['ERROR']: OTP not found")
+                            input('\nEnter to continue')
                 else:
                     print("\n['ERROR']: Phone number or recaptcha token not found")
                     input('\nEnter to continue')
