@@ -14,9 +14,9 @@ class FansToken:
     def __init__(self):
         load_dotenv(os.path.abspath(".env"))
         self.db_host = os.getenv('DB_HOST')
-        self.db_user = os.getenv('DB_USER')
+        self.db_user = os.getenv('DB_USERNAME')
         self.db_pass = os.getenv('DB_PASSWORD')
-        self.db_name = os.getenv('DB_BATABASE')
+        self.db_name = os.getenv('DB_DATABASE')
 
         self.proxy_enable = os.getenv('PROXY_ENABLE')
         self.proxy_user = os.getenv('PROXY_USER')
