@@ -1,7 +1,10 @@
 import os
 import mysql.connector
+import requests
 import cloudscraper
 import base64
+import random
+import time
 from dotenv import load_dotenv
 from anticaptchaofficial.recaptchav2proxyless import *
 
@@ -15,6 +18,12 @@ class FansToken:
         self.db_pass = os.getenv('DB_PASSWORD')
         self.db_name = os.getenv('DB_BATABASE')
 
+        self.proxy_enable = os.getenv('PROXY_ENABLE')
+        self.proxy_user = os.getenv('PROXY_USER')
+        self.proxy_pass = os.getenv('PROXY_PASS')
+        self.proxy_host = os.getenv('PROXY_HOST')
+        self.proxy_port = os.getenv('PROXY_PORT')
+
         self.url_refreshToken = 'https://apis.bitkubnext.com/v1.0/auth/refresh-token'
         self.url_sendOTP = 'https://apis.bitkubnext.com/v1.0/auth/login-with-phone/req'
         self.url_login = 'https://apis.bitkubnext.com/v1.0/auth/login-with-phone'
@@ -26,17 +35,36 @@ class FansToken:
         self.solver.set_website_key(os.getenv('WEBSITE_KEY'))
 
     def request(self, method, url, data=None, header_append=None):
+        user_anget = []
+        f = open(os.path.abspath("src/user-anget.txt"), "r")
+        for x in f:
+            user_anget.append(x.splitlines()[0])
+
         headers = {
             'content-type': 'application/json',
             'Accept-Charset': 'UTF-8',
-            'Origin': 'https://app.bitkubnext.com',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36',
+            'User-Agent': user_anget[random.randint(0, 804)],
         }
         if header_append != None:
             for item in header_append:
-                headers.setdefault(header_append[item,header_append[item]])
+                headers.setdefault(header_append[item, header_append[item]])
 
-        scraper = cloudscraper.create_scraper()
+        session = requests.session()
+        scraper = cloudscraper.create_scraper(
+            sess=session,
+            delay=10,
+            interpreter='js2py',
+            captcha={
+                'provider': 'anticaptcha',
+                'api_key': os.getenv('API_KEY'),
+                'no_proxy': True
+            })
+        if self.proxy_enable.upper() == 'TRUE':
+            proxies = {
+                "http": f"http://{self.proxy_user}:{self.proxy_pass}@{self.proxy_host}:{self.proxy_port}",
+                "https": f"http://{self.proxy_user}:{self.proxy_pass}@{self.proxy_host}:{self.proxy_port}"
+            }
+            scraper.proxies = proxies
         if method == 'GET':
             r = scraper.get(url, headers=headers)
             return {
@@ -201,6 +229,7 @@ class FansToken:
 
                     print(f"[{str(index)}] ID: {str(refresh_id)} Phone >> {refresh_phone} >> Balance : {str(Balance)}")
 
+            time.sleep(random.randint(1, 6))
         if len(botCounts) == 0:
             print("- Lists Empty")
 
