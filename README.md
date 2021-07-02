@@ -4,6 +4,8 @@
 
 ![home screenshot](https://raw.githubusercontent.com/0x01code/FanstokenScaner/main/screenshot/home.png)
 
+ใหม่กว่าด้วย [FansTokenBot](https://github.com/0x01code/FansTokenBot)
+
 ## วิธีใช้งาน
 1. เปลี่ยนชื่อไฟล์ .env.example เป็น .env
 2. เปลี่ยนค่าตัวแปรในไฟล์ .env
