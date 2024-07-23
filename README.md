@@ -20,9 +20,3 @@ API_KEY ไปสมัครจากเว็บ http://getcaptchasolution.com
 ## หมายเหตุ
 - ขอบคุณต้นแบบจาก STP5940
 - อาจโดนบล็อค ip จาก cloudflare
-
-## โดเนท
-LTC: Ldngy2JBgdirmwhRiBhUbnqTp45Jkw5o8V  
-BTC: 3D1JqTN8FtrdzGRpfAN4h8jpKZnBYXeN6H  
-KUB: 0x44a4fad8775b3f08965d9eb1898ab5c10b82fa74  
-USDT [ERC20]: 0x54fae4078949d666402091d1557b7ad1769099ae  
